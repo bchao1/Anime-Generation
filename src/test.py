@@ -57,9 +57,9 @@ parser.add_argument('-t', '--type', help = 'Type of anime generation.',
                     choices = ['fix_noise', 'fix_hair_eye', 'change_hair', 'change_eye'], type = str)
 parser.add_argument('-d', '--model_dir', help = 'Folder where the trained model is saved',
                     default = '../models', type = str)
-parser.add_argument('-h', '--hair_color', help = 'Determine the hair color of the anime characters.'.
+parser.add_argument('-h', '--hair_color', help = 'Determine the hair color of the anime characters.', 
                     default = None, choices = hair_mapping, type = str)
-parser.add_argument('-e', '--eye_color', help = 'Determine the eye color of the anime characters.'.
+parser.add_argument('-e', '--eye_color', help = 'Determine the eye color of the anime characters.',
                     default = None, choices = eye_mapping, type = str)
 parser.add_argument('-s', '--sample_dir', help = 'Folder to save the generated samples.',
                     default = '../generated')
