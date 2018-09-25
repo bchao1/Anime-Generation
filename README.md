@@ -1,5 +1,5 @@
 # Anime-Generation
-A very simple DCGAN-based baseline model for anime generation using ACGAN.
+A very simple DCGAN-based baseline model for anime generation using ACGAN. The pretrained generator model can be found here: https://drive.google.com/file/d/1OFdtSHhmNiMXCBxCzjOQyc4w49sHS9jZ/view?usp=sharing. 
 ## Usage
 ### Training 
 ```
@@ -72,7 +72,8 @@ Images are tagged with the following labels:
 ```python
 ['black', 'orange', 'pink', 'yellow', 'aqua', 'purple', 'green', 'brown', 'red', 'blue']
 ```
-Each training image is tagged with exactly two labels: one from hair tags and the other from eye tags. In `tags.pickle`, each image index is associated with a 22-dimensional tensor. 
+Each training image is tagged with exactly two labels: one from hair tags and the other from eye tags. In `tags.pickle`, each image index is associated with a 22-dimensional tensor (which is a multi-label one-hot encoding). 
+
 ```python
 {1: tensor([1.0, 0, 0, 0, ......., 1.0, 0, 0]),
  2: tensor([0, 0, 1.0, 0, ......., , 0, 0, 1.0],
@@ -81,6 +82,10 @@ Each training image is tagged with exactly two labels: one from hair tags and th
 You can find the training data here: https://drive.google.com/file/d/1jdJXkQIWVGOeb0XJIXE3YuZQeiEPd8rM/view?usp=sharing.
 ***
 ### Testing
+```
+>>> python3 test.py -h
+
+```
 ## Model Architecture
 ### DCGAN 
 
