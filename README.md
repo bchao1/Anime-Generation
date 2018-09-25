@@ -1,7 +1,7 @@
 # Anime-Generation
 A very simple DCGAN-based baseline model for anime generation using ACGAN. The pretrained generator model can be found here: https://drive.google.com/file/d/1OFdtSHhmNiMXCBxCzjOQyc4w49sHS9jZ/view?usp=sharing. 
 
-Generated anime characters with different eye and hair colors, but similar overall structure.
+By fixing noise vector in the generator input, it is possible to generate anime characters with different hair and eye colors but similar overall structure.
 
 ![result](./results/result.png)
 ## Usage
