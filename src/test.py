@@ -65,7 +65,6 @@ parser.add_argument('-s', '--sample_dir', help = 'Folder to save the generated s
 parser.add_argument('-d', '--model_dir', help = 'Folder where the trained model is saved',
                     default = '../models', type = str)
 args = parser.parse_args()
-print(args)
 
 def generate_by_attributes(model, device, latent_dim, hair_classes, eye_classes, hair_color, eye_color):
     hair_tag = torch.zeros(64, hair_classes).to(device)
@@ -159,9 +158,6 @@ def interpolate(model, device, latent_dim, hair_classes, eye_classes, samples = 
         img_list.append(model(z, c))
     output = torch.cat(img_list, 0)
     save_image(utils.denorm(output), '{}/interpolation.png'.format(args.sample_dir), nrow = samples + 2)
-    
-    
-    
         
 def main():
     if not os.path.exists(args.sample_dir):
@@ -192,4 +188,3 @@ def main():
     
 if __name__ == "__main__":
     main()
-
