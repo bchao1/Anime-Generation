@@ -87,6 +87,23 @@ You can find the training data here: https://drive.google.com/file/d/1jdJXkQIWVG
 ```
 >>> python3 test.py -h
 
+usage: test.py [-h] [-t {fix_noise,fix_hair_eye,change_hair,change_eye}]
+               [--hair {orange,white,aqua,gray,green,red,purple,pink,blue,black,brown,blonde}]
+               [--eye {black,orange,pink,yellow,aqua,purple,green,brown,red,blue}]
+               [-s SAMPLE_DIR] [-d MODEL_DIR]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -t {fix_noise,fix_hair_eye,change_hair,change_eye}, --type {fix_noise,fix_hair_eye,change_hair,change_eye}
+                        Type of anime generation.
+  --hair {orange,white,aqua,gray,green,red,purple,pink,blue,black,brown,blonde}
+                        Determine the hair color of the anime characters.
+  --eye {black,orange,pink,yellow,aqua,purple,green,brown,red,blue}
+                        Determine the eye color of the anime characters.
+  -s SAMPLE_DIR, --sample_dir SAMPLE_DIR
+                        Folder to save the generated samples.
+  -d MODEL_DIR, --model_dir MODEL_DIR
+                        Folder where the trained model is saved
 ```
 ## Model Architecture
 ### DCGAN 
