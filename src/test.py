@@ -54,7 +54,7 @@ eye_dict = {
 
 parser = ArgumentParser()
 parser.add_argument('-t', '--type', help = 'Type of anime generation.', 
-                    choices = ['fix_noise', 'fix_hair_eye', 'change_hair', 'change_eye'], 
+                    choices = ['fix_noise', 'fix_hair_eye', 'change_hair', 'change_eye', 'interpolate'], 
                     default = 'fix_noise', type = str)
 parser.add_argument('--hair', help = 'Determine the hair color of the anime characters.', 
                     default = None, choices = hair_mapping, type = str)
@@ -96,7 +96,7 @@ def hair_grad(model, device, latent_dim, hair_classes, eye_classes):
         img_list.append(model(z, tag))
         
     output = torch.cat(img_list, 0)
-    save_image(utils.denorm(output), '../{}/change_hair_color.png'.format(args.sample_dir), nrow = hair_classes)
+    save_image(utils.denorm(output), '{}/change_hair_color.png'.format(args.sample_dir), nrow = hair_classes)
 
 def eye_grad(model, device, latent_dim, hair_classes, eye_classes):
     hair = torch.zeros(hair_classes).to(device)
@@ -113,7 +113,7 @@ def eye_grad(model, device, latent_dim, hair_classes, eye_classes):
         img_list.append(model(z, tag))
         
     output = torch.cat(img_list, 0)
-    save_image(utils.denorm(output), '../{}/change_eye_color.png'.format(args.sample_dir), nrow = eye_classes)
+    save_image(utils.denorm(output), '{}/change_eye_color.png'.format(args.sample_dir), nrow = eye_classes)
 
 def fix_noise(model, device, latent_dim, hair_classes, eye_classes):
     z = torch.randn(latent_dim).unsqueeze(0).to(device)
@@ -130,8 +130,39 @@ def fix_noise(model, device, latent_dim, hair_classes, eye_classes):
             img_list.append(model(z, tag))
         
     output = torch.cat(img_list, 0)
-    save_image(utils.denorm(output), '../{}/fix_noise.png'.format(args.sample_dir), nrow = hair_classes)
+    save_image(utils.denorm(output), '{}/fix_noise.png'.format(args.sample_dir), nrow = hair_classes)
 
+def interpolate(model, device, latent_dim, hair_classes, eye_classes, samples = 10):
+    z1 = torch.randn(1, latent_dim).to(device)
+    h1 = torch.zeros(1, hair_classes).to(device)
+    e1 = torch.zeros(1, eye_classes).to(device)
+    h1[0][np.random.randint(hair_classes)] = 1
+    e1[0][np.random.randint(eye_classes)] = 1    
+    c1 = torch.cat((h1, e1), 1)
+    
+    z2 = torch.randn(1, latent_dim).to(device)
+    h2 = torch.zeros(1, hair_classes).to(device)
+    e2 = torch.zeros(1, eye_classes).to(device)
+    h2[0][np.random.randint(hair_classes)] = 1
+    e2[0][np.random.randint(eye_classes)] = 1    
+    c2 = torch.cat((h2, e2), 1)
+    
+    z_diff = z2 - z1
+    c_diff = c2 - c1
+    z_step = z_diff / (samples + 1)
+    c_step = c_diff / (samples + 1)
+    
+    img_list = []
+    for i in range(0, samples + 2):
+        z = z1 + z_step * i
+        c = c1 + c_step * i
+        img_list.append(model(z, c))
+    output = torch.cat(img_list, 0)
+    save_image(utils.denorm(output), '{}/interpolation.png'.format(args.sample_dir), nrow = samples + 2)
+    
+    
+    
+        
 def main():
     if not os.path.exists(args.sample_dir):
         os.mkdir(args.sample_dir)
@@ -154,6 +185,8 @@ def main():
         eye_grad(G, device, latent_dim, hair_classes, eye_classes)
     elif args.type == 'change_hair':
         hair_grad(G, device, latent_dim, hair_classes, eye_classes)
+    elif args.type == 'interpolate':
+        interpolate(G, device, latent_dim, hair_classes, eye_classes)
     else:
         fix_noise(G, device, latent_dim, hair_classes, eye_classes)
     
