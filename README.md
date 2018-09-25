@@ -2,6 +2,35 @@
 A very simple DCGAN-based baseline model for anime generation using ACGAN.
 ## Usage
 ### Training 
+```
+>>> python3 train.py -h
+usage: train.py [-h] [-d {cuda,cpu}] [-i ITERATIONS] [-b BATCH_SIZE]
+                [-t TRAIN_DIR] [-s SAMPLE_DIR] [-c CHECKPOINT_DIR]
+                [--sample SAMPLE] [--check CHECK] [--lr LR] [--beta BETA]
+                [--aux AUX]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -d {cuda,cpu}, --device {cuda,cpu}
+                        Device to train the model on
+  -i ITERATIONS, --iterations ITERATIONS
+                        Number of iterations to train ACGAN
+  -b BATCH_SIZE, --batch_size BATCH_SIZE
+                        Training batch size
+  -t TRAIN_DIR, --train_dir TRAIN_DIR
+                        Training data directory
+  -s SAMPLE_DIR, --sample_dir SAMPLE_DIR
+                        Directory to store generated images
+  -c CHECKPOINT_DIR, --checkpoint_dir CHECKPOINT_DIR
+                        Directory to save model checkpoints
+  --sample SAMPLE       Sample every _ steps
+  --check CHECK         Save model every _ steps
+  --lr LR               Learning rate of ACGAN. Default: 0.0002
+  --beta BETA           Momentum term in Adam optimizer. Default: 0.5
+  --aux AUX, --classification_weight AUX
+                        Classification loss weight. Default: 1
+```
+
 The directory tree is organized as follows:
 ```
 ├── Anime Generation
@@ -49,7 +78,7 @@ Each training image is tagged with exactly two labels: one from hair tags and th
  2: tensor([0, 0, 1.0, 0, ......., , 0, 0, 1.0],
  ......}
 ```
-You can find the training data here: https://drive.google.com/file/d/1jdJXkQIWVGOeb0XJIXE3YuZQeiEPd8rM/view?usp=sharing .
+You can find the training data here: https://drive.google.com/file/d/1jdJXkQIWVGOeb0XJIXE3YuZQeiEPd8rM/view?usp=sharing.
 ***
 ### Testing
 ## Model Architecture
