@@ -24,7 +24,7 @@ hair_mapping =  ['orange', 'white', 'aqua', 'gray', 'green', 'red', 'purple',
 hair_dict = {
     'orange' : 0,
     'white': 1, 
-    'aqua': 2.
+    'aqua': 2,
     'gray': 3,
     'green': 4,
     'red': 5,
