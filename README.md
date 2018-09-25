@@ -1,5 +1,7 @@
 # Anime-Generation
 A very simple DCGAN-based baseline model for anime generation using ACGAN. The pretrained generator model can be found here: https://drive.google.com/file/d/1OFdtSHhmNiMXCBxCzjOQyc4w49sHS9jZ/view?usp=sharing. 
+
+![result](./results/result.png)
 ## Usage
 ### Training 
 ```
@@ -102,7 +104,7 @@ For more information, please refer to the original ACGAN paper: https://arxiv.or
 Some modifications are made:
 1. The classification loss for the synthesized image was omitted, since we believe the fake image would confuse the discriminator.
 2. The adversarial loss for the discriminator was divided by 2 (average of the fake adversarial loss and real adversarial loss)
-## Results
+## More Results
 Fixed noise, change eye and hair colors.
 
 ![fixed noise](./results/fix_noise.png)
