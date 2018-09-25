@@ -4,6 +4,11 @@ A very simple DCGAN-based baseline model for anime generation using ACGAN. The p
 By fixing noise vector in the generator input, it is possible to generate anime characters with different hair and eye colors but similar overall structure.
 
 ![result](./results/result.png)
+
+By interpolating the input of the generator, we can also see interesting results.
+
+![interpolation](./results/interpolation_1.png)
+![interpolation](./results/interpolation_2.png)
 ## Usage
 ### Training 
 ```
