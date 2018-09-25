@@ -105,6 +105,7 @@ optional arguments:
   -d MODEL_DIR, --model_dir MODEL_DIR
                         Folder where the trained model is saved
 ```
+The default folder where the model is saved is `models`, and the model is named `ACGAN_generator.ckpt`. The generated samples will be in the `generated` folder.
 ## Model Architecture
 ### DCGAN 
 
