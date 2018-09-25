@@ -54,18 +54,20 @@ eye_dict = {
 
 parser = ArgumentParser()
 parser.add_argument('-t', '--type', help = 'Type of anime generation.', 
-                    choices = ['fix_noise', 'fix_hair_eye', 'change_hair', 'change_eye'], type = str)
-parser.add_argument('-d', '--model_dir', help = 'Folder where the trained model is saved',
-                    default = '../models', type = str)
-parser.add_argument('-h', '--hair_color', help = 'Determine the hair color of the anime characters.', 
+                    choices = ['fix_noise', 'fix_hair_eye', 'change_hair', 'change_eye'], 
+                    default = 'fix_noise', type = str)
+parser.add_argument('--hair', help = 'Determine the hair color of the anime characters.', 
                     default = None, choices = hair_mapping, type = str)
-parser.add_argument('-e', '--eye_color', help = 'Determine the eye color of the anime characters.',
+parser.add_argument('--eye',  help = 'Determine the eye color of the anime characters.',
                     default = None, choices = eye_mapping, type = str)
 parser.add_argument('-s', '--sample_dir', help = 'Folder to save the generated samples.',
-                    default = '../generated')
+                    default = '../generated', type = str)
+parser.add_argument('-d', '--model_dir', help = 'Folder where the trained model is saved',
+                    default = '../models', type = str)
 args = parser.parse_args()
+print(args)
 
-def generate_by_attributes(hair_color, eye_color):
+def generate_by_attributes(model, device, latent_dim, hair_classes, eye_classes, hair_color, eye_color):
     hair_tag = torch.zeros(64, hair_classes).to(device)
     eye_tag = torch.zeros(64, eye_classes).to(device)
     hair_class = hair_dict[hair_color]
@@ -76,14 +78,13 @@ def generate_by_attributes(hair_color, eye_color):
     tag = torch.cat((hair_tag, eye_tag), 1)
     z = torch.randn(64, latent_dim).to(device)
     
-    output = G(z, tag)
-    save_image(utils.denorm(output), '../samples/{} hair {} eyes.png'.format(hair_mapping[hair_class], eye_mapping[eye_class]))
+    output = model(z, tag)
+    save_image(utils.denorm(output), '{}/{} hair {} eyes.png'.format(args.sample_dir, hair_mapping[hair_class], eye_mapping[eye_class]))
 
-def hair_grad():
+def hair_grad(model, device, latent_dim, hair_classes, eye_classes):
     eye = torch.zeros(eye_classes).to(device)
     eye[np.random.randint(eye_classes)] = 1
     eye.unsqueeze_(0)
-    eye = torch.cat([eye for _ in range(batch_size)], dim = 0).to(device)
     
     z = torch.randn(latent_dim).unsqueeze(0).to(device)
     img_list = []
@@ -92,17 +93,15 @@ def hair_grad():
         hair[i] = 1
         hair.unsqueeze_(0)
         tag = torch.cat((hair, eye), 1)
-        img_list.append(G(z, tag))
+        img_list.append(model(z, tag))
         
     output = torch.cat(img_list, 0)
-    print(output.shape)
     save_image(utils.denorm(output), '../{}/change_hair_color.png'.format(args.sample_dir), nrow = hair_classes)
 
-def eye_grad():
+def eye_grad(model, device, latent_dim, hair_classes, eye_classes):
     hair = torch.zeros(hair_classes).to(device)
     hair[np.random.randint(hair_classes)] = 1
     hair.unsqueeze_(0)
-    hair = torch.cat([hair for _ in range(batch_size)], dim = 0).to(device)
     
     z = torch.randn(latent_dim).unsqueeze(0).to(device)
     img_list = []
@@ -111,13 +110,12 @@ def eye_grad():
         eye[i] = 1
         eye.unsqueeze_(0)
         tag = torch.cat((hair, eye), 1)
-        img_list.append(G(z, tag))
+        img_list.append(model(z, tag))
         
     output = torch.cat(img_list, 0)
-    print(output.shape)
     save_image(utils.denorm(output), '../{}/change_eye_color.png'.format(args.sample_dir), nrow = eye_classes)
 
-def fix_noise():
+def fix_noise(model, device, latent_dim, hair_classes, eye_classes):
     z = torch.randn(latent_dim).unsqueeze(0).to(device)
     img_list = []
     for i in range(eye_classes):
@@ -129,36 +127,36 @@ def fix_noise():
             hair.unsqueeze_(0)
     
             tag = torch.cat((hair, eye), 1)
-            img_list.append(G(z, tag))
+            img_list.append(model(z, tag))
         
     output = torch.cat(img_list, 0)
     save_image(utils.denorm(output), '../{}/fix_noise.png'.format(args.sample_dir), nrow = hair_classes)
 
 def main():
     if not os.path.exists(args.sample_dir):
-        os.mkdir(sample_dir)
+        os.mkdir(args.sample_dir)
     latent_dim = 100
     hair_classes = 12
     eye_classes = 10
     batch_size = 1
 
     device = 'cpu'
-    G_path = '../{}/ACGAN_generator.ckpt'.format(args.model_dir)
+    G_path = '{}/ACGAN_generator.ckpt'.format(args.model_dir)
 
-    G = G = ACGAN.Generator(latent_dim = latent_dim, code_dim = hair_classes + eye_classes)
+    G = G = ACGAN.Generator(latent_dim = latent_dim, class_dim = hair_classes + eye_classes)
     prev_state = torch.load(G_path)
     G.load_state_dict(prev_state['model'])
     G = G.eval()
 
     if args.type == 'fix_hair_eye':
-        generate_by_attributes(args.hair_color,  args.eye_color)
+        generate_by_attributes(G, device, latent_dim, hair_classes, eye_classes, args.hair,  args.eye)
     elif args.type == 'change_eye':
-        eye_grad()
+        eye_grad(G, device, latent_dim, hair_classes, eye_classes)
     elif args.type == 'change_hair':
-        hair_grad()
+        hair_grad(G, device, latent_dim, hair_classes, eye_classes)
     else:
-        fix_noise()
+        fix_noise(G, device, latent_dim, hair_classes, eye_classes)
     
-
-
+if __name__ == "__main__":
+    main()
 
