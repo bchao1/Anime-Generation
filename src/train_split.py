@@ -9,7 +9,7 @@ import os
 from argparse import ArgumentParser
 
 from datasets import Anime, Shuffler
-from ACGAN import Generator, Discriminator
+from ACGAN_split import Generator, Discriminator
 from utils import save_model, denorm, plot_loss, plot_classifier_loss, show_process
 from utils import generation_by_attributes, get_random_label
 
@@ -23,9 +23,9 @@ parser.add_argument('-b', '--batch_size', help = 'Training batch size',
 parser.add_argument('-t', '--train_dir', help = 'Training data directory', 
                     default = '../data', type = str)
 parser.add_argument('-s', '--sample_dir', help = 'Directory to store generated images', 
-                    default = '../samples', type = str)
+                    default = './samples', type = str)
 parser.add_argument('-c', '--checkpoint_dir', help = 'Directory to save model checkpoints', 
-                    default = '../checkpoints', type = str)
+                    default = './checkpoints', type = str)
 parser.add_argument('--sample', help = 'Sample every _ steps', 
                     default = 500, type = int)
 parser.add_argument('--check', help = 'Save model every _ steps', 
@@ -51,6 +51,7 @@ def main():
     hair_classes, eye_classes = 12, 10
     num_classes = hair_classes + eye_classes
     latent_dim = 100
+    smooth = 0.9
     
     config = 'ACGAN-batch_size-[{}]-steps-[{}]'.format(batch_size, iterations)
     print('Configuration: {}'.format(config))
@@ -61,9 +62,9 @@ def main():
     hair_prior = np.load('../{}/hair_prob.npy'.format(args.train_dir))
     eye_prior = np.load('../{}/eye_prob.npy'.format(args.train_dir))
 
-    random_sample_dir = '../{}/{}/random_generation'.format(args.sample_dir, config)
-    fixed_attribute_dir = '../{}/{}/fixed_attributes'.format(args.sample_dir, config)
-    checkpoint_dir = '../{}/{}'.format(args.checkpoint_dir, config)
+    random_sample_dir = '{}/{}/random_generation'.format(args.sample_dir, config)
+    fixed_attribute_dir = '{}/{}/fixed_attributes'.format(args.sample_dir, config)
+    checkpoint_dir = '{}/{}'.format(args.checkpoint_dir, config)
     
     if not os.path.exists(random_sample_dir):
     	os.makedirs(random_sample_dir)
@@ -81,7 +82,7 @@ def main():
     shuffler = Shuffler(dataset = dataset, batch_size = args.batch_size)
     
     G = Generator(latent_dim = latent_dim, class_dim = num_classes).to(device)
-    D = Discriminator(num_classes = num_classes).to(device)
+    D = Discriminator(hair_classes = hair_classes, eye_classes = eye_classes).to(device)
 
     G_optim = optim.Adam(G.parameters(), betas = [args.beta, 0.999], lr = args.lr)
     D_optim = optim.Adam(D.parameters(), betas = [args.beta, 0.999], lr = args.lr)
@@ -93,11 +94,12 @@ def main():
 
         real_label = torch.ones(batch_size).to(device)
         fake_label = torch.zeros(batch_size).to(device)
+        soft_label = torch.Tensor(batch_size).uniform_(smooth, 1).to(device)
         
         # Train discriminator
         real_img, hair_tags, eye_tags = shuffler.get_batch()
         real_img, hair_tags, eye_tags = real_img.to(device), hair_tags.to(device), eye_tags.to(device)
-        real_tag = torch.cat((hair_tags, eye_tags), dim = 1)
+        # real_tag = torch.cat((hair_tags, eye_tags), dim = 1)
 
         z = torch.randn(batch_size, latent_dim).to(device)
         fake_tag = get_random_label(batch_size = batch_size, 
@@ -105,15 +107,17 @@ def main():
                                     eye_classes = eye_classes, eye_prior = eye_prior).to(device)
         fake_img = G(z, fake_tag).to(device)
                 
-        real_score, real_predict = D(real_img)
-        fake_score, fake_predict = D(fake_img)
+        real_score, real_hair_predict, real_eye_predict = D(real_img)
+        fake_score, _, _ = D(fake_img)
             
-        real_discrim_loss = criterion(real_score, real_label)
+        real_discrim_loss = criterion(real_score, soft_label)
         fake_discrim_loss = criterion(fake_score, fake_label)
 
-        real_classifier_loss = criterion(real_predict, real_tag)
+        real_hair_aux_loss = criterion(real_hair_predict, hair_tags)
+        real_eye_aux_loss = criterion(real_eye_predict, eye_tags)
+        real_classifier_loss = real_hair_aux_loss + real_eye_aux_loss
         
-        discrim_loss = (real_discrim_loss + fake_discrim_loss) * 0.5
+        discrim_loss = real_discrim_loss + fake_discrim_loss
         classifier_loss = real_classifier_loss * args.classification_weight
         
         classifier_log.append(classifier_loss.item())
@@ -128,14 +132,18 @@ def main():
         fake_tag = get_random_label(batch_size = batch_size, 
                                     hair_classes = hair_classes, hair_prior = hair_prior,
                                     eye_classes = eye_classes, eye_prior = eye_prior).to(device)
+        hair_tag = fake_tag[:, hair_classes]
+        eye_tag = fake_tag[:, hair_classes + 1 : eye_classes]
         fake_img = G(z, fake_tag).to(device)
         
-        fake_score, fake_predict = D(fake_img)
+        fake_score, hair_predict, eye_predict = D(fake_img)
         
         discrim_loss = criterion(fake_score, real_label)
-        classifier_loss = criterion(fake_predict, fake_tag)
+        hair_aux_loss = criterion(hair_predict, hair_tag)
+        eye_aux_loss = criterion(eye_predict, eye_tag)
+        classifier_loss = hair_aux_loss + eye_aux_loss
         
-        G_loss = classifier_loss + discrim_loss
+        G_loss = classifier_loss * args.classification_weight + discrim_loss
         G_optim.zero_grad()
         G_loss.backward()
         G_optim.step()

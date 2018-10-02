@@ -1,7 +1,35 @@
 import torch
 import torch.nn as nn
 
-    
+class ResBlock(nn.Module):
+    def __init__(self):
+        super(ResBlock, self).__init__()
+        self.net = nn.Sequential(
+                nn.Conv2d(in_channels = 64, out_channels = 64, kernel_size = 3, 
+                          stride = 1, padding = 1, bias = False),
+                nn.BatchNorm2d(64),
+                nn.ReLU(),
+                nn.Conv2d(in_channels = 64, out_channels = 64, kernel_size = 3, 
+                          stride = 1, padding = 1, bias = False),
+                nn.BatchNorm2d(64)
+        )
+        
+    def forward(self, _input):
+        res_input = _input.clone()
+        output = self.net(_input)
+        return res_input + output
+
+class Colorizer(nn.Module):
+    def __init__(self, num_blocks):
+        super(Colorizer, self).__init__()
+        self.num_blocks = num_blocks
+        self.net = nn.Sequential()
+        for i in range(num_blocks):
+            self.net.add_module('res_block_{}'.format(i + 1), ResBlock())
+    def forward(self, _input):
+        output = self.net(_input)
+        return output
+            
 class Generator(nn.Module):
     """ ACGAN generator.
     
@@ -15,13 +43,14 @@ class Generator(nn.Module):
     """
 
 
-    def __init__(self, latent_dim, class_dim):
+    def __init__(self, latent_dim, class_dim, color_blocks):
         """ Initializes Generator Class with latent_dim and class_dim."""
         super(Generator, self).__init__()
         
         self.latent_dim = latent_dim
         self.class_dim = class_dim
-
+        self.color_blocks = color_blocks
+        
         self.gen = nn.Sequential(
                     nn.ConvTranspose2d(in_channels = self.latent_dim + 
                     								 self.class_dim, 
@@ -56,12 +85,20 @@ class Generator(nn.Module):
                     nn.BatchNorm2d(128),
                     nn.ReLU(inplace = True),
                     nn.ConvTranspose2d(in_channels = 128,
-                                       out_channels = 3,
+                                       out_channels = 64,
                                        kernel_size = 4,
                                        stride = 2,
                                        padding = 1),
+                    nn.BatchNorm2d(64),
+                    nn.ReLU(inplace = True),
+                    Colorizer(self.color_blocks),
+                    nn.Conv2d(in_channels = 64,
+                              out_channels = 3, 
+                              kernel_size = 1,
+                              stride = 1),
                     nn.Tanh()
                     )
+            
         return
     
     def forward(self, _input, _class):
@@ -78,6 +115,7 @@ class Generator(nn.Module):
 
         concat = torch.cat((_input, _class), dim = 1)  # Concatenate noise and class vector.
         concat = concat.unsqueeze(2).unsqueeze(3)  # Reshape the latent vector into a feature map.
+        
         return self.gen(concat)
 
 class Discriminator(nn.Module):
@@ -179,9 +217,7 @@ if __name__ == '__main__':
     z = torch.randn(batch_size, latent_dim)
     c = torch.randn(batch_size, class_dim)
     
-    G = Generator(latent_dim, class_dim)
+    G = Generator(latent_dim, class_dim, 8)
     D = Discriminator(class_dim)
     o = G(z, c)
     print(o.shape)
-    x, y = D(o)
-    print(x.shape, y.shape)
