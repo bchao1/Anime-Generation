@@ -121,14 +121,20 @@ For more details on DCGAN, please refer to https://github.com/Mckinsey666/GAN-Tu
 ### ACGAN 
 
 ![ACGAN_Structure](./img_src/ACGAN.png)  
-In ACGAN, the discriminator not only learns to discriminate between real and synthesized images, but also needs to classify images into different classes. This not only stablizes training, but also allows us to manipulate generated image attribures.  
-
+In ACGAN, the discriminator not only learns to discriminate between real and synthesized images, but also needs to classify images into different classes. This not only stablizes training, but also allows us to manipulate generated image attribures.
+  
 For more information, please refer to the original ACGAN paper: https://arxiv.org/abs/1610.09585.
+
+### Model
+![Model](./img_src/model.png)
+
 ## Algorithm
 ![ACGAN algorithm](./img_src/algo.png)
 Some modifications are made:
 1. The classification loss for the synthesized image was omitted, since we believe the fake image would confuse the discriminator.
-2. The adversarial loss for the discriminator was divided by 2 (average of the fake adversarial loss and real adversarial loss)
+2. The adversarial loss for the discriminator was divided by 2 (average of the fake adversarial loss and real adversarial loss) in order to balance the gradient descent schedule of G/D.
+3. The class vector is multilabelled, and hence the classifier in the discriminator goes through a sigmoid rather than softmax at the output layer.
+
 ## More Results
 Fixed noise, change eye and hair colors.
 
@@ -137,10 +143,18 @@ Fixed noise, change eye and hair colors.
 Fixed eye attribute and noise, change hair colors.
 
 ![change hair color](./results/change_hair_color.png)
+![change hair color](./results/more/change_hair_color_1.png)
+![change hair color](./results/more/change_hair_color_2.png)
+![change hair color](./results/more/change_hair_color_3.png)
+![change hair color](./results/more/change_hair_color_4.png)
 ***
 Fixed hair attribute and noise, change eye colors.
 
 ![change eye color](./results/change_eye_color.png)
+![change eye color](./results/more/change_eye_color_1.png)
+![change eye color](./results/more/change_eye_color_2.png)
+![change eye color](./results/more/change_eye_color_3.png)
+![change eye color](./results/more/change_eye_color_4.png)
 ***
 Fixed hair and eye attributes, change noise.
 
@@ -155,6 +169,14 @@ Fixed hair and eye attributes, change noise.
 - White hair purple eyes
 
 ![white hair purple eyes](./results/white_hair_purple_eyes.png)
+
+- Red hair blue eyes
+
+![red hair blue eyes](./results/more/red_hair_blue_eyes.png)
+
+- Blonde hair red eyes
+
+![blonde hair red eyes](./results/more/blonde_hair_red_eyes.png)
 
 ## Improvements to be made
 - Low color intensity
