@@ -3,25 +3,38 @@
 
 Generate colorful anime characters using GAN.
 <br>
-![img](results/change_hair.png)
-![img](results/change_eye.png)
-<br>
-<br>
+<p align="center">
+  <img src="results/change_hair.png" />
+</p>
+<p align="center">
+  <img src="results/change_eye.png" />
+</p>
+
 By interpolating generator input, we can see some interesting results.
-![img](results/interpolate.png)
-<br>
-<br>
+<p align="center">
+  <img src="results/interpolate.png" />
+</p>
+
 By fixing color classes and varying noise, we can generate anime characters with same colors but different identity.
 
-![img](results/blue_eye_red_hair.png)
+<p align="center">
+  <img src="results/blue_eye_red_hair.png" />
+</p>
+<p align="center">
+  <img src="results/green_eye_purple_hair.png" />
+</p>
 
-![img](results/green_eye_purple_hair.png)
+<p align="center">
+  <img src="results/orange_eye_blue_hair.png" />
+</p>
 
-![img](results/orange_eye_blue_hair.png)
+<p align="center">
+  <img src="results/purple_eye_pink_hair.png" />
+</p>
 
-![img](results/purple_eye_pink_hair.png)
-
-![img](results/red_eye_black_hair.png)
+<p align="center">
+  <img src="results/red_eye_black_hair.png" />
+</p>
 ## Start traning
 Modify `config.yaml` as you wish.
 ```
