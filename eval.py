@@ -109,6 +109,25 @@ def generate_class_fix(class_num, batch_size, best_size = 64, fix = None):
     img = denorm(img[idx])
     save_image(img, os.path.join(result_dir, img_name), pad_value = 255)
 
+def generate_class_map(class_num):
+    G = load_G(G_path).cuda()
+    eye_class, hair_class = class_num
+    
+    label_batch = []
+    for i in range(eye_class):
+        eye_label = torch.zeros(1, eye_class)
+        eye_label[0, i] = 1
+        for j in range(hair_class):
+            hair_label = torch.zeros(1, hair_class)
+            hair_label[0, j] = 1
+            label = torch.cat([eye_label, hair_label], 1)
+            label_batch.append(label)
+    c = torch.cat(label_batch, 0).cuda()
+    z = torch.empty(1, noise_dim).normal_(0, 0.9).repeat(eye_class * hair_class, 1).cuda()
+    img = G(z, c)
+    
+    save_image(denorm(img), os.path.join(result_dir, 'class_map.png'), nrow = hair_class, pad_value = 255)
+    
 def interpolate(class_num, steps):
     """
         Interpolate.
@@ -143,9 +162,10 @@ def get_label_map():
     
 if __name__ == '__main__':
     class_num = (10, 12)
-    #generate_class_gradient(class_num, 0)
+    #generate_class_map(class_num)
+    generate_class_gradient(class_num, 1)
     #generate_class_fix(class_num, 1024, best_size = 8, fix = (7, 8))
-    interpolate(class_num, 8)
+    #interpolate(class_num, 8)
     #get_label_map()
 
 
