@@ -1,5 +1,27 @@
 # ACGAN Conditional Anime Generation
 > Note: I have restructured the whole folder, cleaned up training code, pruned my dataset, and updated most of the results. You can see the old version of this repo in `old`.
+
+Generate colorful anime characters using GAN.
+<br>
+![img](results/change_hair.png)
+![img](results/change_eye.png)
+<br>
+<br>
+By interpolating generator input, we can see some interesting results.
+![img](results/interpolate.png)
+<br>
+<br>
+By fixing color classes and varying noise, we can generate anime characters with same colors but different identity.
+
+![img](results/blue_eye_red_hair.png)
+
+![img](results/green_eye_purple_hair.png)
+
+![img](results/orange_eye_blue_hair.png)
+
+![img](results/purple_eye_pink_hair.png)
+
+![img](results/red_eye_black_hair.png)
 ## Start traning
 Modify `config.yaml` as you wish.
 ```
@@ -44,5 +66,5 @@ The `.json` files map discrete labels to semantics.
 }
 ```
 ## Some notes
-- When training on the first dataset, adding some color transformations to images prior to traning might help. You can achieve this through various `torchvisions.transforms.functional` methods.
+- When training on the first dataset, adding some color transformations to images as a preprocessing step traning might help. You can achieve this through various `torchvisions.transforms.functional` methods.
 - Train with N(0, 1) but sample from Gaussian of smaller variance when evaluating. Just an engineering hack to get better results.
