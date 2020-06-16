@@ -1,5 +1,6 @@
 data/
-new/runs/
+data.tgz
+runs/
 **/.DS_Store
 
 __pycache__/

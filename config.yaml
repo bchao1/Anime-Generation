@@ -1,7 +1,7 @@
 run: acgan
 type: train
 
-data_root: '../data'
+data_root: 'data'
 
 batch_size: 64
 epochs: 500
