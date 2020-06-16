@@ -1,0 +1,32 @@
+run: acgan
+type: train
+
+data_root: '../data'
+
+batch_size: 64
+epochs: 500
+print_n_iter: 5
+log_n_iter: 5
+sample_n_iter: 500
+save_n_epoch: 10
+
+
+optim:
+    lr: 0.0002
+    beta: 0.5
+
+classes:
+    eye: 10
+    hair: 12
+    #year: 9
+
+class_num: "[10, 12]"
+
+model:
+    noise_dim: 100
+    class_dim: 22
+    input_size: (64, 64)
+    
+loss_weight:
+    dis: 1
+    cls: 1

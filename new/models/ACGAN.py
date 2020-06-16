@@ -96,13 +96,11 @@ class Discriminator(nn.Module):
     	classifier_layer: fully conneceted layer for multilabel classifiction.
 			
     """
-    def __init__(self, hair_classes, eye_classes):
+    def __init__(self, num_classes):
         """ Initialize Discriminator Class with num_classes."""
         super(Discriminator, self).__init__()
 
-        self.hair_classes = hair_classes
-        self.eye_classes = eye_classes
-        
+        self.num_classes = num_classes
         self.conv_layers = nn.Sequential(
                     nn.Conv2d(in_channels = 3, 
                              out_channels = 128, 
@@ -145,26 +143,15 @@ class Discriminator(nn.Module):
                     ) 
         self.bottleneck = nn.Sequential(
                     nn.Conv2d(in_channels = 1024, 
-                             out_channels = 1024, 
+                             out_channels = 512, 
                              kernel_size = 4,
                              stride = 1),
-                    nn.BatchNorm2d(1024),
+                    nn.BatchNorm2d(512),
                     nn.LeakyReLU(0.2)
                     )
-        self.hair_classifier = nn.Sequential(
-                    nn.Linear(1024, 128),
-                    nn.BatchNorm1d(128),
-                    nn.LeakyReLU(0.2),
-                    nn.Linear(128, self.hair_classes),
-                    nn.Softmax()
-                    )
-        
-        self.eye_classifier = nn.Sequential(
-                    nn.Linear(1024, 128),
-                    nn.BatchNorm1d(128),
-                    nn.LeakyReLU(0.2),
-                    nn.Linear(128, self.eye_classes),
-                    nn.Softmax()
+        self.classifier_layer = nn.Sequential(
+                    nn.Linear(512, self.num_classes),
+                    nn.Sigmoid()
                     )
 
         return
@@ -182,21 +169,19 @@ class Discriminator(nn.Module):
         features = self.conv_layers(_input)  
         discrim_output = self.discriminator_layer(features).view(-1) # Single-value scalar
         flatten = self.bottleneck(features).squeeze()
-        
-        hair_class = self.hair_classifier(flatten) # Outputs probability for each class label
-        eye_class = self.eye_classifier(flatten) 
-        return discrim_output, hair_class, eye_class
+        aux_output = self.classifier_layer(flatten) # Outputs probability for each class label
+        return discrim_output, aux_output
 
 if __name__ == '__main__':
     latent_dim = 100
-    class_dim = 22
+    class_dim = 31
     batch_size = 5
     z = torch.randn(batch_size, latent_dim)
     c = torch.randn(batch_size, class_dim)
     
     G = Generator(latent_dim, class_dim)
-    D = Discriminator(12, 10)
+    D = Discriminator(class_dim)
     o = G(z, c)
     print(o.shape)
-    x, y, z = D(o)
-    print(x.shape, y.shape, z.shape)
+    x, y = D(o)
+    print(x.shape, y.shape)
