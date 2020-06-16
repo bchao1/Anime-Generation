@@ -1,0 +1,2 @@
+# ACGAN Conditional Anime Generation
+> Note: I have restructured the whole folder, cleaned up training code, pruned my dataset, and updated most of the results. You can see the old version of this repo in `old`.
