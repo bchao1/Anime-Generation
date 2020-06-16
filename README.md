@@ -35,6 +35,7 @@ By fixing color classes and varying noise, we can generate anime characters with
 <p align="center">
   <img src="results/red_eye_black_hair.png" />
 </p>
+
 ## Start traning
 Modify `config.yaml` as you wish.
 ```
