@@ -1,17 +1,53 @@
 import os
 import sys
+import h5py 
+
+import numpy as np
 import torch
 import random
 import pickle
 from torch.utils.data import Dataset, DataLoader
 from PIL import Image, ImageFile
 from torchvision import transforms
-from torchvision.transforms import functional as F
+from torchvision.transforms import functional as TF
+import torch.nn.functional as F
 from torchvision.utils import save_image
 
 
 from PIL import ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
+
+class Anime_Dataset_H5(Dataset):
+    def __init__(self, root, mode, transform=None):
+        assert mode in ["year", "hair_eye", "hair", "eye"]
+        self.mode = mode
+        self.root = root
+        self.transform = transform
+
+        with h5py.File(root, 'r') as hf:
+            if self.mode == "year":
+                self.imgs = hf["year_imgs"][...]
+                self.labels = hf["year_labels"][...]
+                self.num_classes = np.max(self.labels) + 1 # 0 - l (l + 1 class)
+            elif self.mode == "hair_eye":
+                self.imgs = hf["hair_eye_imgs"][...]
+                self.labels = hf["hair_eye_labels"][...]
+                self.num_classes = None
+            assert self.imgs.shape[0] == self.labels.shape[0]
+
+    def __len__(self):
+        return self.imgs.shape[0]
+    
+    def __getitem__(self, i):
+        img, label = self.imgs[i], self.labels[i]
+        if self.transform is not None:
+            img = self.transform(img)
+        label = F.one_hot(torch.tensor(label), self.num_classes)
+        return img, label
+
+
+        
+
 
 class Anime_Dataset:
     def __init__(self, root, class_num, transform):
@@ -36,9 +72,9 @@ class Anime_Dataset:
         print(len(self.labels), len(self.img_files))
     
     def color_transform(self, x):
-        x = F.adjust_saturation(x, 2.5)
-        x = F.adjust_gamma(x, 0.7)
-        x = F.adjust_contrast(x, 1.2)
+        x = TF.adjust_saturation(x, 2.5)
+        x = TF.adjust_gamma(x, 0.7)
+        x = TF.adjust_contrast(x, 1.2)
         return x
         
     def __len__(self):
@@ -76,6 +112,18 @@ def get_anime_dataloader(root, classes, batch_size):
     dataset = Anime_Dataset(root, classes, transform)
     dataloader = DataLoader(dataset, batch_size = batch_size, shuffle = True, drop_last = True)
     return dataloader
+
+def get_anime_h5_dataloader(root, batch_size):
+    
+    transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.ColorJitter(0.0, 0.2, 0.2, 0.0), # color jitter
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)), # [0, 1] to [-1, 1]
+        transforms.RandomHorizontalFlip(p = 0.5)
+    ])
+    dataset = Anime_Dataset_H5(root, "year", transform)
+    dataloader = DataLoader(dataset, batch_size = batch_size, shuffle = True, drop_last = True, num_workers=4)
+    return dataloader
     
 def denorm(img):
     """ Denormalize input image tensor. (From [0,1] -> [-1,1]) 
@@ -88,11 +136,7 @@ def denorm(img):
     return output.clamp(0, 1)
 
 if __name__ == '__main__':
-    dataloader = get_anime_dataloader('../../data', (10, 12), 50)
-    
-    img, label, mask = next(iter(dataloader))
-    print(img.shape)
-    print(label.shape)
-    print(mask)
-    save_image(denorm(img), 'test.png')
+    dataloader = get_anime_h5_dataloader('/mnt/data2/bchao/anime/data/dataset.h5', 50)
+    img, label = next(iter(dataloader))
+    save_image(denorm(img), "test.png")
     
