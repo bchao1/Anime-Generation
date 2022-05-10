@@ -96,9 +96,11 @@ class Discriminator(nn.Module):
     	classifier_layer: fully conneceted layer for multilabel classifiction.
 			
     """
-    def __init__(self, num_classes):
+    def __init__(self, num_classes, classifier_final_layer="softmax"):
         """ Initialize Discriminator Class with num_classes."""
         super(Discriminator, self).__init__()
+        
+        assert classifier_final_layer in ["softmax", "sigmoid"]
 
         self.num_classes = num_classes
         self.conv_layers = nn.Sequential(
@@ -149,12 +151,18 @@ class Discriminator(nn.Module):
                     nn.BatchNorm2d(512),
                     nn.LeakyReLU(0.2)
                     )
+        
+
+        if classifier_final_layer == "sigmoid":
+            final_layer_module = nn.Sigmoid()
+        else: # softmax
+            final_layer_module = nn.Softmax(-1)
+
         self.classifier_layer = nn.Sequential(
                     nn.Linear(512, self.num_classes),
-                    nn.Sigmoid()
-                    )
+                    final_layer_module
+                )
 
-        return
     
     def forward(self, _input):
         """ Defines a forward pass of a discriminator.
@@ -180,7 +188,7 @@ if __name__ == '__main__':
     c = torch.randn(batch_size, class_dim)
     
     G = Generator(latent_dim, class_dim)
-    D = Discriminator(class_dim)
+    D = Discriminator(class_dim, "softmax")
     o = G(z, c)
     print(o.shape)
     x, y = D(o)
