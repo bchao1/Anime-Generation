@@ -8,19 +8,18 @@ from trainer_h5 import ACGANTrainer_h5
 config_file = 'config.yaml'
 
 def make_dirs(run_dir):
-    if os.path.exists(run_dir):
-        shutil.rmtree(run_dir)
+    shutil.rmtree(run_dir, ignore_errors=True)
     os.makedirs(run_dir, exist_ok = True)
     os.makedirs(os.path.join(run_dir, 'images', 'class'))
     os.makedirs(os.path.join(run_dir, 'ckpt'))
     
 def main(args):
     config = yaml.load(open(config_file, 'r'), Loader = yaml.FullLoader)
-    run_dir = os.path.join('runs', str(config['run']))
+    run_dir = os.path.join(config["runs_root"], str(config['run']))
     save_dir = os.path.join(config["save_root"], str(config['run']))
 
     config["run_dir"] = run_dir
-    config["save_dir"] = run_dir
+    config["save_dir"] = save_dir
     
     if os.path.exists(run_dir) and not args.override:
         print("Run name exists! Please choose another name.")

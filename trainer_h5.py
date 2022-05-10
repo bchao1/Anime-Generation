@@ -1,15 +1,16 @@
 import os
+import sys
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import torchvision.transforms as transforms
-from torchvision.utils import save_image
+from torchvision.utils import save_image, make_grid
 from torch.utils.tensorboard import SummaryWriter
 
 from models.ACGAN import Generator, Discriminator
 from dataset.anime_dataset import get_anime_h5_dataloader
-from utils.utils import denorm, save_model
+from utils.utils import denorm, save_model, Logger
 
 class ACGANTrainer_h5:
     def __init__(self, config):
@@ -26,9 +27,10 @@ class ACGANTrainer_h5:
         self.lr = config['optim']['lr']
         self.beta = config['optim']['beta']
         
-        
-        self.classes = config['classes']
-        self.class_num = int(eval(config['class_num'])[0])
+        self.class_num = int(config['class_num'][0])
+        self.select_classes = config["select_classes"]
+        if self.select_classes is not None:
+            assert len(self.select_classes) == self.class_num
         
         self.batch_size = config['batch_size']
         self.epochs = config['epochs']
@@ -37,13 +39,13 @@ class ACGANTrainer_h5:
         self.log_n_iter = config['log_n_iter']
         self.save_n_epoch = config['save_n_epoch']
         
-        self.dataloader = get_anime_h5_dataloader(self.data_root, self.batch_size)
+        self.dataloader = get_anime_h5_dataloader(self.data_root, self.batch_size, self.select_classes)
         self.steps_per_epoch = int(np.ceil(self.dataloader.dataset.__len__() * 1.0 / self.batch_size))
         print("Traning images: {}".format(self.dataloader.dataset.__len__()))
             
         self.input_size = config['model']['input_size']
         self.noise_dim = config['model']['noise_dim']
-        self.class_dim = config['model']['class_dim']
+        self.class_dim = self.class_num
         
         self.G = Generator(self.noise_dim, self.class_dim).to(self.device)
         self.D = Discriminator(self.class_dim, "softmax").to(self.device)
@@ -57,6 +59,7 @@ class ACGANTrainer_h5:
         self.D_optim = optim.Adam(self.D.parameters(), lr = self.lr, betas = [self.beta, 0.999])
         
         self.writer = SummaryWriter(self.run_dir)
+        sys.stdout = Logger()
         
     def sample_class_label(self, batch_size):
         label = torch.LongTensor(batch_size, 1).random_() % self.class_num
@@ -72,9 +75,11 @@ class ACGANTrainer_h5:
         print(img.shape, label.shape, l.shape)
         
         itr = 0
-        fix_z = torch.randn(self.class_num, self.noise_dim).to(self.device)
+        samples = 8
+        fix_z = torch.repeat_interleave(torch.randn(samples, self.noise_dim), self.class_num, 0).to(self.device)
         #fix_class = self.sample_class_label(self.batch_size).to(self.device)
-        fix_class = torch.eye(self.class_num).to(self.device)
+        fix_class = torch.eye(self.class_num).repeat(samples, 1).to(self.device)
+
         
         
         for e in range(self.epochs): 
@@ -101,11 +106,13 @@ class ACGANTrainer_h5:
                 
                 real_dis_loss = self.dis_crit(real_score, real_label)
                 fake_dis_loss = self.dis_crit(fake_score, fake_label)
-                dis_loss = (real_dis_loss + fake_dis_loss) * 0.5
+                dis_loss = (real_dis_loss + fake_dis_loss)
                 
                 real_cls_loss = self.cls_crit(real_pred, real_class)
+                fake_cls_loss = self.cls_crit(fake_pred, fake_class)
+                cls_loss = (real_cls_loss + fake_cls_loss)
                 
-                D_loss = real_cls_loss * self.loss_weight['cls'] + dis_loss * self.loss_weight['dis']
+                D_loss = cls_loss * self.loss_weight['cls'] + dis_loss * self.loss_weight['dis']
                 
                 self.D_optim.zero_grad()
                 D_loss.backward()
@@ -124,8 +131,6 @@ class ACGANTrainer_h5:
                 G_loss = fake_cls_loss * self.loss_weight['cls'] + fake_dis_loss * self.loss_weight['dis']
                 
                 
-                cls_loss = (fake_cls_loss + real_cls_loss) * 0.5
-                
                 self.G_optim.zero_grad()
                 G_loss.backward()
                 self.G_optim.step()
@@ -142,9 +147,10 @@ class ACGANTrainer_h5:
 
                     class_img = denorm(self.G(fix_z, fix_class))
                     
-                    save_image(class_img, os.path.join(self.save_dir, 'images', 'class', '{}.png'.format(itr)))
+                    save_image(class_img, os.path.join(self.save_dir, 'images', 'class', '{}.png'.format(itr)), nrow=self.class_num, padding=2, pad_value=255)
                     
-                    self.writer.add_images('fix', class_img, itr)
+                    image_grid = make_grid(class_img, nrow=self.class_num, padding=2, pad_value=255)
+                    self.writer.add_image('fix', image_grid, itr)
                     #self.writer.add_image('class', class_img, itr)
             
 

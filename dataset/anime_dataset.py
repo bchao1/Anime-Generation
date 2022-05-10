@@ -12,13 +12,14 @@ from torchvision import transforms
 from torchvision.transforms import functional as TF
 import torch.nn.functional as F
 from torchvision.utils import save_image
+from collections import Counter
 
 
 from PIL import ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 class Anime_Dataset_H5(Dataset):
-    def __init__(self, root, mode, transform=None):
+    def __init__(self, root, mode, transform=None, select_classes=None):
         assert mode in ["year", "hair_eye", "hair", "eye"]
         self.mode = mode
         self.root = root
@@ -28,18 +29,43 @@ class Anime_Dataset_H5(Dataset):
             if self.mode == "year":
                 self.imgs = hf["year_imgs"][...]
                 self.labels = hf["year_labels"][...]
-                self.num_classes = np.max(self.labels) + 1 # 0 - l (l + 1 class)
+                #self.num_classes = np.max(self.labels) + 1 # 0 - l (l + 1 class)
             elif self.mode == "hair_eye":
                 self.imgs = hf["hair_eye_imgs"][...]
                 self.labels = hf["hair_eye_labels"][...]
-                self.num_classes = None
+                #self.num_classes = None
             assert self.imgs.shape[0] == self.labels.shape[0]
+
+        # Get subset of training data
+        if select_classes is None:
+            self.num_classes = np.max(self.labels) + 1
+        else:
+            """
+                [[], [], [], ... []]
+            """
+            self.num_classes = len(select_classes)
+
+            new_imgs = []
+            new_labels = []
+            for i, classes in enumerate(select_classes):
+                # i is new class label
+                for c in classes:
+                    subset_ids = np.where(self.labels == c)[0] # a list of ids 
+                    img_subset = self.imgs[subset_ids]
+                    #for j, img in enumerate(img_subset[:5]):
+                    #    Image.fromarray(img).save(f"test/class{c}_n{j}.png")
+                    new_imgs.append(img_subset)
+                    new_labels.append(np.ones(len(subset_ids)) * i)
+            new_imgs = np.concatenate(new_imgs, 0)
+            new_labels = np.concatenate(new_labels, 0)
+            self.imgs = new_imgs
+            self.labels = new_labels.astype(int)
 
     def __len__(self):
         return self.imgs.shape[0]
     
     def __getitem__(self, i):
-        img, label = self.imgs[i], self.labels[i]
+        img, label = self.imgs[i], int(self.labels[i])
         if self.transform is not None:
             img = self.transform(img)
         label = F.one_hot(torch.tensor(label), self.num_classes)
@@ -113,7 +139,7 @@ def get_anime_dataloader(root, classes, batch_size):
     dataloader = DataLoader(dataset, batch_size = batch_size, shuffle = True, drop_last = True)
     return dataloader
 
-def get_anime_h5_dataloader(root, batch_size):
+def get_anime_h5_dataloader(root, batch_size, select_classes):
     
     transform = transforms.Compose([
         transforms.ToTensor(),
@@ -121,10 +147,18 @@ def get_anime_h5_dataloader(root, batch_size):
         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)), # [0, 1] to [-1, 1]
         transforms.RandomHorizontalFlip(p = 0.5)
     ])
-    dataset = Anime_Dataset_H5(root, "year", transform)
+    dataset = Anime_Dataset_H5(root, "year", transform, select_classes)
     dataloader = DataLoader(dataset, batch_size = batch_size, shuffle = True, drop_last = True, num_workers=4)
     return dataloader
+
+def get_anime_h5_dataset_statistics():
+    dataset = Anime_Dataset_H5("/mnt/data2/bchao/anime/data/dataset.h5", "year", None, [[0, 1], [7, 8]])
+    labels = dataset.labels
+    class_count = Counter(labels)
+    for c in sorted(class_count.keys()):
+        print(c, class_count[c])
     
+
 def denorm(img):
     """ Denormalize input image tensor. (From [0,1] -> [-1,1]) 
     
@@ -136,7 +170,8 @@ def denorm(img):
     return output.clamp(0, 1)
 
 if __name__ == '__main__':
-    dataloader = get_anime_h5_dataloader('/mnt/data2/bchao/anime/data/dataset.h5', 50)
-    img, label = next(iter(dataloader))
-    save_image(denorm(img), "test.png")
+    #dataloader = get_anime_h5_dataloader('/mnt/data2/bchao/anime/data/dataset.h5', 50)
+    #img, label = next(iter(dataloader))
+    #save_image(denorm(img), "test.png")
+    get_anime_h5_dataset_statistics()
     

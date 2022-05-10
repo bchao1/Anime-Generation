@@ -1,10 +1,11 @@
-run: acgan_h5
+run: acgan_h5_v6
 type: train
 
 gpu_id: 1
 
 data_root: "/mnt/data2/bchao/anime/data/dataset.h5"
 save_root: "/mnt/data2/bchao/anime/experiments"
+runs_root: "/mnt/data2/bchao/anime/logs"
 
 batch_size: 64
 epochs: 1000
@@ -23,11 +24,12 @@ classes:
     #hair: 12
     year: 9
 
-class_num: "[9]"
+class_num: [2]
+select_classes: [[0, 1], [7, 8]]
 
 model:
     noise_dim: 100
-    class_dim: 9
+    class_dim: 2
     input_size: (64, 64)
     
 loss_weight:
