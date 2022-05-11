@@ -1,0 +1,4 @@
+torch.manual_seed(0)
+
+Selected ids:
+10, 13, 14, 35, 60, 65, 72, 82, 86, 94, 98

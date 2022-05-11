@@ -45,7 +45,18 @@ I noticed that anime produced in different years have distinctive artistic style
    
 By conditioning the ACGAN on **year labels**, we can generate characters with different artistic styles.
    
-![by year](./results/year_selected.png)
+<p align="center">
+  <img src="results/year_selected.png" />
+</p>
+   
+Interpolating along the year latent code:
+<p align="center">
+  <img src="results/year_morph.png" />
+</p>
+<p align="center">
+  <img src="results/year_morph.gif" height=200/>
+</p>
+
 
 
 
