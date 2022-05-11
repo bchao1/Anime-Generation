@@ -53,9 +53,6 @@ Interpolating along the year latent code:
 <p align="center">
   <img src="results/year_morph.png" />
 </p>
-<p align="center">
-  <img src="results/year_morph.gif" height=200/>
-</p>
 
 
 
