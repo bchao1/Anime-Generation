@@ -143,7 +143,7 @@ def get_anime_h5_dataloader(root, batch_size, select_classes):
     
     transform = transforms.Compose([
         transforms.ToTensor(),
-        transforms.ColorJitter(0.0, 0.2, 0.2, 0.0), # color jitter
+        transforms.ColorJitter(0.0, 0.25, 0.25, 0.0), # color jitter
         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)), # [0, 1] to [-1, 1]
         transforms.RandomHorizontalFlip(p = 0.5)
     ])

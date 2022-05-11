@@ -1,18 +1,21 @@
-run: acgan_h5_v6
+run: acgan_h5_v8
 type: train
 
 gpu_id: 1
 
 data_root: "/mnt/data2/bchao/anime/data/dataset.h5"
-save_root: "/mnt/data2/bchao/anime/experiments"
-runs_root: "/mnt/data2/bchao/anime/logs"
+save_root: "/mnt/data3/bchao/anime/experiments"
+runs_root: "/mnt/data3/bchao/anime/logs"
+
+generator_path: "/mnt/data2/bchao/anime/experiments/acgan_h5_v6/ckpt/G_26810.pth"
+discriminator_path: "/mnt/data2/bchao/anime/experiments/acgan_h5_v6/ckpt/D_26810.pth"
 
 batch_size: 64
-epochs: 1000
+epochs: 5000
 print_n_iter: 5
 log_n_iter: 5
 sample_n_iter: 500
-save_n_epoch: 10
+save_n_epoch: 50
 
 
 optim:

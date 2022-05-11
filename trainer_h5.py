@@ -10,7 +10,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 from models.ACGAN import Generator, Discriminator
 from dataset.anime_dataset import get_anime_h5_dataloader
-from utils.utils import denorm, save_model, Logger
+from utils.utils import denorm, load_model, save_model, Logger
 
 class ACGANTrainer_h5:
     def __init__(self, config):
@@ -60,6 +60,13 @@ class ACGANTrainer_h5:
         
         self.writer = SummaryWriter(self.run_dir)
         sys.stdout = Logger()
+
+        if config["generator_path"] is not None:
+            print("Loading generator checkpoint:", config["generator_path"])
+            self.G, self.G_optim = load_model(self.G, self.G_optim, config["generator_path"])
+        if config["discriminator_path"] is not None:
+            print("Loading discriminator checkpoint:", config["discriminator_path"])
+            self.D, self.D_optim = load_model(self.D, self.D_optim, config["discriminator_path"])
         
     def sample_class_label(self, batch_size):
         label = torch.LongTensor(batch_size, 1).random_() % self.class_num
