@@ -10,6 +10,7 @@ Generate colorful anime characters using GAN.
   <img src="results/change_eye.png" />
 </p>
 
+## Generating characters with different hair and eye colors
 By interpolating generator input, we can see some interesting results.
 <p align="center">
   <img src="results/interpolate.png" />
@@ -35,6 +36,18 @@ By fixing color classes and varying noise, we can generate anime characters with
 <p align="center">
   <img src="results/red_eye_black_hair.png" />
 </p>
+
+## Generate characters with different artistic styles
+
+I noticed that anime produced in different years have distinctive artistic styles. To name a few:
+- Characters in older anime tend to have larger, angular eyes, while newer anime have characters with round eyes. 
+- Colors are brighter and more saturated in older anime, while newer anime have mild colors.
+   
+By conditioning the ACGAN on **year labels**, we can generate characters with different artistic styles.
+   
+![by year](./results/year_selected.png)
+
+
 
 ## Start traning
 Modify `config.yaml` as you wish.
