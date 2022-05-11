@@ -27,9 +27,11 @@ def load_model(model, optimizer, file_path):
     prev_state = torch.load(file_path)
     
     model.load_state_dict(prev_state['model'])
-    optimizer.load_state_dict(prev_state['optim'])
-
-    return model, optimizer
+    if optimizer is None:
+        return model
+    else:
+        optimizer.load_state_dict(prev_state['optim'])
+        return model, optimizer
 
 import sys
 
