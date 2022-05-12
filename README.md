@@ -57,7 +57,7 @@ Interpolating along the year latent code:
 
 
 
-## Start traning
+## Start training
 Modify `config.yaml` as you wish.
 ```
 > python3 run.py
